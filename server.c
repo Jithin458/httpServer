@@ -23,6 +23,7 @@ int createServerSocket(){
     }
     return serverSocket;
 }
+
 void bindSocket(SOCKET serverSocket){
   struct sockaddr_in seraddr;
   memset(&seraddr, 0,sizeof(seraddr));
@@ -38,6 +39,7 @@ void bindSocket(SOCKET serverSocket){
   }
 
 }
+
 void listenClients(SOCKET serverSocket){
     if(listen(serverSocket, SOMAXCONN) == SOCKET_ERROR){
         printf("Listen failed with error %dld\n",WSAGetLastError());
@@ -47,6 +49,7 @@ void listenClients(SOCKET serverSocket){
     }
     printf("Server listening on port %d..\n",SERVER_PORT);
 }
+
 void handleClient(SOCKET serverSocket) {
     SOCKET client = accept(serverSocket, 0, 0);
     if (client == INVALID_SOCKET) {
@@ -77,8 +80,6 @@ void handleClient(SOCKET serverSocket) {
     "Content-Type: text/html\r\n"
     "Content-Length: %ld\r\n"
     "Connection: close\r\n\r\n", fileSize);
-
-
                 send(client, headers, strlen(headers), 0);
                 send(client, fileData, fileSize, 0);
                 free(fileData);
@@ -90,13 +91,9 @@ void handleClient(SOCKET serverSocket) {
     } else {
        printf("recv failed\n");
     }
-    Sleep(100);  // 100 milliseconds
-    closesocket(client);
-
-   
+    Sleep(100);
+    closesocket(client); 
 }
-
-
 
 int main(){
     initializeSock();
@@ -104,9 +101,8 @@ int main(){
     bindSocket(serverSocket);
     listenClients(serverSocket);
     while(1){
- handleClient(serverSocket);
+      handleClient(serverSocket);
     }
-   
     closesocket(serverSocket);
     WSACleanup();
     
