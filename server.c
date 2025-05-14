@@ -55,11 +55,13 @@ void handleClient(SOCKET serverSocket) {
     }
     char request[256] = {0};
     int bytesReceived = recv(client, request, sizeof(request) - 1, 0);
+    printf("Received request:\n%s\n", request);
+
     if (bytesReceived > 0) {
-        if (memcmp(request, "GET / ", 6) == 0) {
+        if (memcmp(request, "GET /", 5) == 0) {
             FILE* f = fopen("index.html", "r");
             if (!f) {
-                const char* notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 13\r\n\r\n404 Not Found";
+                const char* notFound = "HTTP/1.1 404 Not Found\r\nContent-Length: 13\r\nConnection: close\r\n\r\n404 Not Found";
                 send(client, notFound, strlen(notFound), 0);
             } else {
                 fseek(f, 0, SEEK_END);
@@ -70,19 +72,28 @@ void handleClient(SOCKET serverSocket) {
                 fclose(f);
                 fileData[fileSize] = '\0';
                 char headers[128];
-                snprintf(headers, sizeof(headers),"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %ld\r\n\r\n", fileSize);
+              snprintf(headers, sizeof(headers),
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type: text/html\r\n"
+    "Content-Length: %ld\r\n"
+    "Connection: close\r\n\r\n", fileSize);
+
+
                 send(client, headers, strlen(headers), 0);
                 send(client, fileData, fileSize, 0);
                 free(fileData);
             }
         } else {
-            const char* notImplemented = "HTTP/1.1 501 Not Implemented\r\nContent-Length: 15\r\n\r\n501 Not Implemented";
+           const char* notImplemented = "HTTP/1.1 501 Not Implemented\r\nContent-Length: 15\r\nConnection: close\r\n\r\n501 Not Implemented";
          send(client, notImplemented, strlen(notImplemented), 0);
         }
     } else {
        printf("recv failed\n");
     }
+    Sleep(100);  // 100 milliseconds
     closesocket(client);
+
+   
 }
 
 
@@ -92,7 +103,10 @@ int main(){
     SOCKET serverSocket = createServerSocket();
     bindSocket(serverSocket);
     listenClients(serverSocket);
-    handleClient(serverSocket);
+    while(1){
+ handleClient(serverSocket);
+    }
+   
     closesocket(serverSocket);
     WSACleanup();
     
